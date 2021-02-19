@@ -19,12 +19,12 @@ from keras.preprocessing import image
 from keras.applications.vgg16 import preprocess_input, decode_predictions
 
 
-"""
+
 #GPU 사용시 풀어 놓을 것
 physical_devices = tf.config.experimental.list_physical_devices('GPU')
 assert len(physical_devices) > 0, "Not enough GPU hardware devices available"
 config = tf.config.experimental.set_memory_growth(physical_devices[0], True)
-"""
+
 
 original_dataset_dir = './datasets/training_set'
 
@@ -101,13 +101,13 @@ model.add(layers.Dropout(0.5))
 model.add(layers.Dense(5,activation='softmax'))
 
 #model.compile(loss='categorical_crossentropy', optimizer=optimizers.RMSprop(lr=1e-4),metrics=['acc'])
-model.compile(loss="binary_crossentropy",
+model.compile(loss="categorical_crossentropy",
                               optimizer="adam",metrics=["acc"])
 model.summary()
 
 history = model.fit_generator(train_generator,
                               steps_per_epoch=300,
-                              epochs=10,
+                              epochs=50,
                               validation_data=validation_generator,
                               validation_steps=30)
 
