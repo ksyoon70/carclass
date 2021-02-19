@@ -9,7 +9,6 @@ import numpy as np
 import os, shutil
 import tensorflow as tf
 import matplotlib.pyplot as plt
-import cv2
 import random
 from keras.applications import VGG16
 from keras import layers
@@ -28,31 +27,19 @@ config = tf.config.experimental.set_memory_growth(physical_devices[0], True)
 """
 
 original_dataset_dir = './datasets/training_set'
-original_dataset_cats_dir = os.path.join(original_dataset_dir,'cats')
-original_dataset_dogs_dir = os.path.join(original_dataset_dir,'dogs')
 
 
-categories = ["cat","dog"]
+categories = ["class1","class2","class3","class45","class6"]
 
 #이미지 크기 조정 크기
 IMG_SIZE = 224
 #배치 싸이즈
-BATCH_SIZE = 20
-
-training_data = []
-training_file_info = []
-
-validation_data = []
-validation_file_info = []
-
-
-x = []
-y = []
+BATCH_SIZE = 4
 
 
 #------------- 영상 생성 및 디렉토리 시작 --------------
 
-base_dir = './datasets/cats_and_dogs_small'
+base_dir = './datasets'
 if not os.path.isdir(base_dir):
     os.mkdir(base_dir)
 
@@ -68,100 +55,7 @@ test_dir = os.path.join(base_dir,'test')
 if not os.path.isdir(test_dir):
     os.mkdir(test_dir)
 
-train_cats_dir = os.path.join(train_dir,'cats')
-if not os.path.isdir(train_cats_dir):
-    os.mkdir(train_cats_dir)
 
-train_dogs_dir = os.path.join(train_dir,'dogs')
-if not os.path.isdir(train_dogs_dir):
-    os.mkdir(train_dogs_dir)
-    
-
-validation_cats_dir = os.path.join(validation_dir,'cats')
-if not os.path.isdir(validation_cats_dir):
-    os.mkdir(validation_cats_dir)
-
-
-validation_dogs_dir = os.path.join(validation_dir,'dogs')
-if not os.path.isdir(validation_dogs_dir):
-    os.mkdir(validation_dogs_dir)
-    
-test_cats_dir = os.path.join(test_dir,'cats')
-if not os.path.isdir(test_cats_dir):
-    os.mkdir(test_cats_dir)
-
-
-test_dogs_dir = os.path.join(test_dir,'dogs')
-if not os.path.isdir(test_dogs_dir):
-    os.mkdir(test_dogs_dir)
-    
-if not len(os.listdir(train_cats_dir)):
-    
-    fnames = ['cat.{}.jpg'.format(i) for i in range(1,1001)]
-    
-    for fname in fnames:
-        src = os.path.join(original_dataset_cats_dir,fname)
-        dst = os.path.join(train_cats_dir,fname)
-        shutil.copy(src,dst)
-        
-else:
-    print('훈련용 고양이 이미지 갯수:',len(os.listdir(train_cats_dir)))
- 
-if not len(os.listdir(validation_cats_dir)):
-    
-    fnames = ['cat.{}.jpg'.format(i) for i in range(1001,1501)]
-    
-    for fname in fnames:
-        src = os.path.join(original_dataset_cats_dir,fname)
-        dst = os.path.join(validation_cats_dir,fname)
-        shutil.copy(src,dst)
-else:
-    print('검증용 고양이 이미지 갯수:',len(os.listdir(validation_cats_dir)))
-    
-if not len(os.listdir(test_cats_dir)):
-
-    fnames = ['cat.{}.jpg'.format(i) for i in range(1501,2001)]
-    for fname in fnames:
-        src = os.path.join(original_dataset_cats_dir,fname)
-        dst = os.path.join(test_cats_dir,fname)
-        shutil.copy(src,dst)
-else:
-    print('테스트용 고양이 이미지 갯수:',len(os.listdir(validation_cats_dir)))
-    
-    
-if not len(os.listdir(train_dogs_dir)):
-
-    fnames = ['dog.{}.jpg'.format(i) for i in range(1,1001)]
-    
-    for fname in fnames:
-        src = os.path.join(original_dataset_dogs_dir,fname)
-        dst = os.path.join(train_dogs_dir,fname)
-        shutil.copy(src,dst)
-    
-else:
-    print('훈련용 강아지 이미지 갯수:',len(os.listdir(train_dogs_dir)))
-    
-if not len(os.listdir(validation_dogs_dir)):
-    
-    fnames = ['dog.{}.jpg'.format(i) for i in range(1001,1501)]
-    
-    for fname in fnames:
-        src = os.path.join(original_dataset_dogs_dir,fname)
-        dst = os.path.join(validation_dogs_dir,fname)
-        shutil.copy(src,dst)
-
-else:
-    print('검증용 강아지 이미지 갯수:',len(os.listdir(validation_dogs_dir)))
-    
-if not len(os.listdir(test_dogs_dir)):
-
-    fnames = ['dog.{}.jpg'.format(i) for i in range(1501,2001)]
-    for fname in fnames:
-        src = os.path.join(original_dataset_dogs_dir,fname)
-        dst = os.path.join(test_dogs_dir,fname)
-        shutil.copy(src,dst)
-else:
-    print('테스트용 강아지 이미지 갯수:',len(os.listdir(test_dogs_dir)))
     
 train_datagen = ImageDataGenerator(
                             rescale=1./255,
@@ -178,20 +72,20 @@ test_datagen = ImageDataGenerator(rescale=1./255)
 train_generator = train_datagen.flow_from_directory(train_dir,
                                                     target_size=(IMG_SIZE,IMG_SIZE),
                                                     batch_size=BATCH_SIZE,
-                                                    class_mode='binary')
+                                                    class_mode='categorical')
 
 
 validation_generator = test_datagen.flow_from_directory(validation_dir,
                                                     target_size=(IMG_SIZE,IMG_SIZE),
                                                     batch_size=BATCH_SIZE,
-                                                    class_mode='binary')
+                                                    class_mode='categorical')
 
 
   
 conv_base = VGG16(weights='imagenet',
                   include_top = False,
                   input_shape=(IMG_SIZE,IMG_SIZE,3))
-#conv_base.summary()
+conv_base.summary()
 
 
 # Convolution Layer를 학습되지 않도록 고정 
@@ -204,20 +98,21 @@ model.add(conv_base)
 model.add(layers.Flatten())
 model.add(layers.Dense(256,activation='relu'))
 model.add(layers.Dropout(0.5))
-model.add(layers.Dense(1,activation='sigmoid'))
+model.add(layers.Dense(5,activation='softmax'))
 
-model.compile(loss='binary_crossentropy', optimizer=optimizers.RMSprop(lr=1e-4),metrics=['acc'])
-
-#model.summary()
+#model.compile(loss='categorical_crossentropy', optimizer=optimizers.RMSprop(lr=1e-4),metrics=['acc'])
+model.compile(loss="binary_crossentropy",
+                              optimizer="adam",metrics=["acc"])
+model.summary()
 
 history = model.fit_generator(train_generator,
-                              steps_per_epoch=50,
-                              epochs=30,
+                              steps_per_epoch=300,
+                              epochs=10,
                               validation_data=validation_generator,
-                              validation_steps=25)
- 
-    
-model.save('cats_and_dogs_small_3.h5')
+                              validation_steps=30)
+
+
+model.save('carclass_1.h5')
 
 
 
