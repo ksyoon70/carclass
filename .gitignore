@@ -126,6 +126,8 @@ dmypy.json
 datasets/*
 *.bak
 *.h5
+logs/*
+trained/*
 .spyproject/config/workspace.ini
 
 __MACOSX/._datasets

@@ -17,7 +17,10 @@ from keras import optimizers
 from keras.preprocessing.image import ImageDataGenerator
 from keras.preprocessing import image
 from keras.applications.vgg16 import preprocess_input, decode_predictions
-
+from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard
+from datetime import datetime
+from sklearn.utils import class_weight
+import natsort
 
 
 #GPU 사용시 풀어 놓을 것
@@ -27,16 +30,42 @@ config = tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 
 original_dataset_dir = './datasets/training_set'
-
-
-categories = ["class1","class2","class3","class45","class6"]
+#categories = ["class1","class2","class3","class45","class6"]
+categories = []
+y_train = []
+backbone = "vgg16"
 
 #이미지 크기 조정 크기
 IMG_SIZE = 224
 #배치 싸이즈
 BATCH_SIZE = 4
+#epochs
+EPOCHS =  30
 
+def get_model_path(model_type, backbone="vgg16"):
+    """Generating model path from model_type value for save/load model weights.
+    inputs:
+        model_type = "rpn", "faster_rcnn"
+        backbone = "vgg16", "mobilenet_v2"
+    outputs:
+        model_path = os model path, for example: "trained/rpn_vgg16_model_weights.h5"
+    """
+    main_path = "trained"
+    if not os.path.exists(main_path):
+        os.makedirs(main_path)
+    model_path = os.path.join(main_path, "{}_{}_model_weights.h5".format(model_type, backbone))
+    return model_path
 
+def get_log_path(model_type, backbone="vgg16", custom_postfix=""):
+    """Generating log path from model_type value for tensorboard.
+    inputs:
+        model_type = "rpn", "faster_rcnn"
+        backbone = "vgg16", "mobilenet_v2"
+        custom_postfix = any custom string for log folder name
+    outputs:
+        log_path = tensorboard log path, for example: "logs/rpn_mobilenet_v2/{date}"
+    """
+    return "logs/{}_{}{}/{}".format(model_type, backbone, custom_postfix, datetime.now().strftime("%Y%m%d-%H%M%S"))
 #------------- 영상 생성 및 디렉토리 시작 --------------
 
 base_dir = './datasets'
@@ -55,7 +84,17 @@ test_dir = os.path.join(base_dir,'test')
 if not os.path.isdir(test_dir):
     os.mkdir(test_dir)
 
+categorie_list = os.listdir(train_dir)
+categorie_list = natsort.natsorted(categorie_list)
+for categorie in categorie_list:
+    categories.append(categorie)
 
+index = 0    
+for categorie in categories:
+    catpath = os.path.join(train_dir,categorie)
+    y_train += [index] * len(os.listdir(catpath))
+    index = index + 1
+    
     
 train_datagen = ImageDataGenerator(
                             rescale=1./255,
@@ -72,20 +111,27 @@ test_datagen = ImageDataGenerator(rescale=1./255)
 train_generator = train_datagen.flow_from_directory(train_dir,
                                                     target_size=(IMG_SIZE,IMG_SIZE),
                                                     batch_size=BATCH_SIZE,
-                                                    class_mode='categorical')
+                                                    shuffle=True,
+                                                    seed=42,
+                                                    class_mode='categorical',
+                                                    classes = categories)
 
 
 validation_generator = test_datagen.flow_from_directory(validation_dir,
                                                     target_size=(IMG_SIZE,IMG_SIZE),
                                                     batch_size=BATCH_SIZE,
-                                                    class_mode='categorical')
+                                                    shuffle=True,
+                                                    seed=42,
+                                                    class_mode='categorical',
+                                                    classes = categories)
 
 
+print(train_generator.class_indices)
   
 conv_base = VGG16(weights='imagenet',
                   include_top = False,
                   input_shape=(IMG_SIZE,IMG_SIZE,3))
-conv_base.summary()
+#conv_base.summary()
 
 
 # Convolution Layer를 학습되지 않도록 고정 
@@ -98,21 +144,41 @@ model.add(conv_base)
 model.add(layers.Flatten())
 model.add(layers.Dense(256,activation='relu'))
 model.add(layers.Dropout(0.5))
-model.add(layers.Dense(5,activation='softmax'))
+model.add(layers.Dense(len(categories),activation='softmax'))
 
 #model.compile(loss='categorical_crossentropy', optimizer=optimizers.RMSprop(lr=1e-4),metrics=['acc'])
 model.compile(loss="categorical_crossentropy",
                               optimizer="adam",metrics=["acc"])
-model.summary()
+#model.summary()
 
-history = model.fit_generator(train_generator,
+# Load weights
+log_path = get_log_path("cls", backbone)
+model_path = get_model_path("cls")
+checkpoint_callback = ModelCheckpoint(model_path, monitor="val_loss", save_best_only=True, save_weights_only=True)
+tensorboard_callback = TensorBoard(log_dir=log_path)
+
+"""
+class_weights = class_weight.compute_class_weight('balanced',
+                                                 np.unique(y_train),
+                                                 y_train)
+"""
+class_weights = class_weight.compute_class_weight(
+               'balanced',
+                np.unique(train_generator.classes), 
+                train_generator.classes) 
+
+class_weights = {i : class_weights[i] for i in range(len(categories))}
+
+history = model.fit(train_generator,
                               steps_per_epoch=300,
-                              epochs=50,
+                              epochs=EPOCHS,
                               validation_data=validation_generator,
-                              validation_steps=30)
+                              validation_steps=30,
+                              class_weight=class_weights,
+                              callbacks=[checkpoint_callback, tensorboard_callback])
 
 
-model.save('carclass_1.h5')
+model.save('carclass_1.h5',)
 
 
 

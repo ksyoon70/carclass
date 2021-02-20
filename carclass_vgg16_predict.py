@@ -17,13 +17,33 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.preprocessing import image
 from keras.applications.vgg16 import preprocess_input, decode_predictions
 from keras.models import load_model
+import natsort
 
+#GPU 사용시 풀어 놓을 것
+physical_devices = tf.config.experimental.list_physical_devices('GPU')
+assert len(physical_devices) > 0, "Not enough GPU hardware devices available"
+config = tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 IMG_SIZE = 224
 
-categories = ["class1","class2","class3","class45","class6"]
+categories = []
 
-test_dir = './datasets/test_set'
+test_dir = './datasets/test'
+
+
+base_dir = './datasets'
+if not os.path.isdir(base_dir):
+    os.mkdir(base_dir)
+
+train_dir = os.path.join(base_dir,'train')
+if not os.path.isdir(train_dir):
+    os.mkdir(train_dir)
+
+
+categorie_list = os.listdir(train_dir)
+categorie_list = natsort.natsorted(categorie_list)
+for categorie in categorie_list:
+    categories.append(categorie)
 
 model = load_model('carclass_1.h5')
 
