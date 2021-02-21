@@ -38,9 +38,9 @@ backbone = "vgg16"
 #이미지 크기 조정 크기
 IMG_SIZE = 224
 #배치 싸이즈
-BATCH_SIZE = 4
+BATCH_SIZE = 20
 #epochs
-EPOCHS =  30
+EPOCHS =  50
 
 def get_model_path(model_type, backbone="vgg16"):
     """Generating model path from model_type value for save/load model weights.
@@ -170,15 +170,15 @@ class_weights = class_weight.compute_class_weight(
 class_weights = {i : class_weights[i] for i in range(len(categories))}
 
 history = model.fit(train_generator,
-                              steps_per_epoch=300,
+                              #steps_per_epoch=300,
                               epochs=EPOCHS,
                               validation_data=validation_generator,
-                              validation_steps=30,
+                              #validation_steps=30,
                               class_weight=class_weights,
                               callbacks=[checkpoint_callback, tensorboard_callback])
 
 
-model.save('carclass_1.h5',)
+model.save('carclass_truck.h5',)
 
 
 
