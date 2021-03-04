@@ -129,6 +129,7 @@ datasets/*
 logs/*
 trained/*
 .spyproject/config/workspace.ini
+*.zip
 
 __MACOSX/._datasets
 
