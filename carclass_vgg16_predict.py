@@ -26,7 +26,7 @@ config = tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 IMG_SIZE = 224
 
-THRESH_HOLD = 0.9
+THRESH_HOLD = 0.8
 
 categories = []
 
@@ -34,7 +34,9 @@ result_cateories = []
 
 dst_dirs = []
 
-show_images = True
+show_images = False
+
+file_move = True
 
 
 #시험 폴더 위치 지정
@@ -116,7 +118,11 @@ if len(os.listdir(src_dir)):
                 dst = os.path.join(dst_dirs[cat_len -1 ],file)
                 fail_count += 1
             #결과 디렉토리에 파일 저장
-            shutil.copy(src,dst)
+            if file_move :
+                shutil.move(src,dst)
+            else:
+                shutil.copy(src,dst)
+                
             if show_images :
                 plt.title(tilestr)
                 plt.imshow(img_tensor[0])
