@@ -34,6 +34,8 @@ result_cateories = []
 
 dst_dirs = []
 
+show_images = True
+
 
 #시험 폴더 위치 지정
 src_dir = './datasets/test'
@@ -42,6 +44,10 @@ src_dir = './datasets/test'
 base_dir = './datasets'
 if not os.path.isdir(base_dir):
     os.mkdir(base_dir)
+    
+trained_dir = './trained'
+if not os.path.isdir(trained_dir):
+    os.mkdir(trained_dir)
 
 #훈련 폴더 생성  
 train_dir = os.path.join(base_dir,'train')
@@ -70,13 +76,17 @@ for categorie in categories:
     if not os.path.isdir(dst_dir):
          os.mkdir(dst_dir)
     dst_dirs.append(dst_dir)
-
-model = load_model('carclass_truck.h5')
-weight_dir = os.path.join('./','trained')
-weight_path = os.path.join(weight_dir,'cls_vgg16_model_weights.h5')
+    
+#read model
+model = load_model('carclass_model.h5')
+#read weight value from trained dir
+weight_path = os.path.join(trained_dir,'cls_vgg16_model_weights.h5')
 model.load_weights(weight_path)
 
 print('테스트용 이미지 갯수:',len(os.listdir(src_dir)))
+
+recog_count = 0
+fail_count = 0
 
 if len(os.listdir(src_dir)):
 
@@ -100,19 +110,22 @@ if len(os.listdir(src_dir)):
             if preds[0][index] > THRESH_HOLD :
                 tilestr = 'predict: {}'.format(categories[index] ) + '' + '  probability: {:.2f}'.format(preds[0][index]*100 )  + ' %'
                 dst = os.path.join(dst_dirs[index],file)
+                recog_count += 1
             else:
                 tilestr = 'Not sure but: {}'.format(categories[index] ) + '' + '  probability: {:.2f}'.format(preds[0][index]*100)  + ' %'
                 dst = os.path.join(dst_dirs[cat_len -1 ],file)
+                fail_count += 1
             #결과 디렉토리에 파일 저장
             shutil.copy(src,dst)
-            plt.title(tilestr)
-            plt.imshow(img_tensor[0])
-            plt.show()
+            if show_images :
+                plt.title(tilestr)
+                plt.imshow(img_tensor[0])
+                plt.show()
         except Exception as e:
             pass
                 
-        
-        
+print('recognition: {}'.format(recog_count) +'  ({:.2f})'.format(recog_count*100/len(os.listdir(src_dir))) + ' %')       
+print('fail: {}'.format(fail_count) +'  ({:.2f})'.format(fail_count*100/len(os.listdir(src_dir))) + ' %')         
         
         
 

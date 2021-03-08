@@ -28,7 +28,6 @@ physical_devices = tf.config.experimental.list_physical_devices('GPU')
 assert len(physical_devices) > 0, "Not enough GPU hardware devices available"
 config = tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
-
 original_dataset_dir = './datasets/training_set'
 #categories = ["class1","class2","class3","class45","class6"]
 categories = []
@@ -41,6 +40,13 @@ IMG_SIZE = 224
 BATCH_SIZE = 20
 #epochs
 EPOCHS =  50
+
+# train data count
+train_data_count = 0
+
+# validation data count
+val_data_count = 0
+
 
 def get_model_path(model_type, backbone="vgg16"):
     """Generating model path from model_type value for save/load model weights.
@@ -92,8 +98,13 @@ for categorie in categorie_list:
 index = 0    
 for categorie in categories:
     catpath = os.path.join(train_dir,categorie)
-    y_train += [index] * len(os.listdir(catpath))
+    valpath = os.path.join(validation_dir,categorie)
+    #y_train += [index] * len(os.listdir(catpath))
+    #get training data file count
+    train_data_count += len(os.listdir(catpath))
+    val_data_count += len(os.listdir(valpath))
     index = index + 1
+    
     
     
 train_datagen = ImageDataGenerator(
@@ -171,16 +182,20 @@ class_weights = class_weight.compute_class_weight(
 
 class_weights = {i : class_weights[i] for i in range(len(categories))}
 
+#calculate steps_per_epoch and validation_steps
+steps_per_epoch = int(train_data_count/BATCH_SIZE)
+validation_steps = int(val_data_count/BATCH_SIZE)
+
 history = model.fit(train_generator,
-                              steps_per_epoch=200,
+                              steps_per_epoch=steps_per_epoch,
                               epochs=EPOCHS,
                               validation_data=validation_generator,
-                              validation_steps=50,
+                              validation_steps=validation_steps,
                               class_weight=class_weights,
                               callbacks=[checkpoint_callback, tensorboard_callback])
 
 
-model.save('carclass_truck.h5',)
+model.save('carclass_model.h5',)
 
 
 
