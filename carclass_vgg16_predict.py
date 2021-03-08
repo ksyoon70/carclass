@@ -72,6 +72,9 @@ for categorie in categories:
     dst_dirs.append(dst_dir)
 
 model = load_model('carclass_truck.h5')
+weight_dir = os.path.join('./','trained')
+weight_path = os.path.join(weight_dir,'cls_vgg16_model_weights.h5')
+model.load_weights(weight_path)
 
 print('테스트용 이미지 갯수:',len(os.listdir(src_dir)))
 

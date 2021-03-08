@@ -98,15 +98,17 @@ for categorie in categories:
     
 train_datagen = ImageDataGenerator(
                             rescale=1./255,
-                            rotation_range=40,
+                            rotation_range=5,
                              width_shift_range=0.2,
                              height_shift_range=0.2,
                              shear_range=0.2,
-                             zoom_range=0.2,
-                             horizontal_flip=True)
+                             zoom_range=0.2)
 
 #train_datagen = ImageDataGenerator(rescale=1./255)
 test_datagen = ImageDataGenerator(rescale=1./255)
+
+
+
 
 train_generator = train_datagen.flow_from_directory(train_dir,
                                                     target_size=(IMG_SIZE,IMG_SIZE),
@@ -170,10 +172,10 @@ class_weights = class_weight.compute_class_weight(
 class_weights = {i : class_weights[i] for i in range(len(categories))}
 
 history = model.fit(train_generator,
-                              #steps_per_epoch=300,
+                              steps_per_epoch=200,
                               epochs=EPOCHS,
                               validation_data=validation_generator,
-                              #validation_steps=30,
+                              validation_steps=50,
                               class_weight=class_weights,
                               callbacks=[checkpoint_callback, tensorboard_callback])
 
