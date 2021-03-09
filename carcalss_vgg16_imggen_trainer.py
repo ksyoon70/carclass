@@ -39,7 +39,7 @@ IMG_SIZE = 224
 #배치 싸이즈
 BATCH_SIZE = 20
 #epochs
-EPOCHS =  50
+EPOCHS =  100
 
 # train data count
 train_data_count = 0

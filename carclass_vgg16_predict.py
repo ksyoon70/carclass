@@ -85,7 +85,10 @@ model = load_model('carclass_model.h5')
 weight_path = os.path.join(trained_dir,'cls_vgg16_model_weights.h5')
 model.load_weights(weight_path)
 
-print('테스트용 이미지 갯수:',len(os.listdir(src_dir)))
+
+total_test_files = len(os.listdir(src_dir))
+
+print('테스트용 이미지 갯수:',total_test_files)
 
 recog_count = 0
 fail_count = 0
@@ -130,8 +133,8 @@ if len(os.listdir(src_dir)):
         except Exception as e:
             pass
                 
-print('recognition: {}'.format(recog_count) +'  ({:.2f})'.format(recog_count*100/len(os.listdir(src_dir))) + ' %')       
-print('fail: {}'.format(fail_count) +'  ({:.2f})'.format(fail_count*100/len(os.listdir(src_dir))) + ' %')         
+print('recognition: {}'.format(recog_count) +'  ({:.2f})'.format(recog_count*100/total_test_files) + ' %')       
+print('fail: {}'.format(fail_count) +'  ({:.2f})'.format(fail_count*100/total_test_files) + ' %')         
         
         
 

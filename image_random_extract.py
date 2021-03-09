@@ -27,7 +27,7 @@ assert len(physical_devices) > 0, "Not enough GPU hardware devices available"
 config = tf.config.experimental.set_memory_growth(physical_devices[0], True)
 """
 
-SAMPLE_IMG_COUNT = 500
+SAMPLE_IMG_COUNT = 5000
 
 
 src_dir = './class16'
@@ -35,6 +35,8 @@ src_dir = './class16'
 dst_dir = './test'
 
 base_dir = './'
+
+option_move = True
 
 #소스 디렉토리가 없으면 만든다.
 if not os.path.isdir(src_dir):
@@ -61,7 +63,11 @@ if total_files >  SAMPLE_IMG_COUNT :
             
             src = os.path.join(src_dir,file)
             dst = os.path.join(dst_dir,file)
-            shutil.copy(src,dst)
+
+            if option_move :
+                shutil.move(src,dst)
+            else:
+                shutil.copy(src,dst)
             proc_num =  proc_num + 1
             
             print('처리상황: ', proc_num*100/total_files + '%')
