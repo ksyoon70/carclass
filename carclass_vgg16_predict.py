@@ -18,12 +18,14 @@ from keras.preprocessing import image
 from keras.applications.vgg16 import preprocess_input, decode_predictions
 from keras.models import load_model
 import natsort
+import time
 
 #GPU 사용시 풀어 놓을 것
+"""
 physical_devices = tf.config.experimental.list_physical_devices('GPU')
 assert len(physical_devices) > 0, "Not enough GPU hardware devices available"
 config = tf.config.experimental.set_memory_growth(physical_devices[0], True)
-
+"""
 IMG_SIZE = 224
 
 THRESH_HOLD = 0.8
@@ -93,9 +95,12 @@ print('테스트용 이미지 갯수:',total_test_files)
 recog_count = 0
 fail_count = 0
 
+start_time = time.time() # strat time
+
 if len(os.listdir(src_dir)):
 
     files = os.listdir(src_dir)
+
     for file in files:
         
         try:
@@ -132,8 +137,11 @@ if len(os.listdir(src_dir)):
                 plt.show()
         except Exception as e:
             pass
-                
-print('recognition: {}'.format(recog_count) +'  ({:.2f})'.format(recog_count*100/total_test_files) + ' %')       
+        
+end_time = time.time()        
+print("수행시간: {:.2f}".format(end_time - start_time))
+print("건당 수행시간 : {:.2f}".format((end_time - start_time)/total_test_files))             
+print('recognition: {:.2f}'.format(recog_count) +'  ({:.2f})'.format(recog_count*100/total_test_files) + ' %')       
 print('fail: {}'.format(fail_count) +'  ({:.2f})'.format(fail_count*100/total_test_files) + ' %')         
         
         
