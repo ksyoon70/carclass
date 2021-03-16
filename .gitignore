@@ -130,6 +130,7 @@ logs/*
 trained/*
 .spyproject/config/workspace.ini
 *.zip
+frozen_models/*
 
 __MACOSX/._datasets
 
