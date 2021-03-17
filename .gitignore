@@ -131,7 +131,9 @@ trained/*
 .spyproject/config/workspace.ini
 *.zip
 frozen_models/*
-
+build-carclass_client-Desktop-Debug/*
+build-carclass_client-Desktop_Qt_6_0_2_MSVC2019_64bit-Debug/*
+build-carclass_client-Desktop_Qt_6_0_2_MSVC2019_64bit-Release/*
 __MACOSX/._datasets
 
 __MACOSX/datasets/
